@@ -1,20 +1,28 @@
 const mongoose = require('mongoose');
+const mongoURI =  "mongodb://root:<your-password>@127.0.0.1:27017";
 
-// Replace '<db_username>', '<db_password>', '<db_name>', and '<cluster_url>' with your actual MongoDB details
-const mongoURI = 'mongodb://root:zohaibsaddiq:NzgyMi16b2hhaWJz@127.0.0.1:2701/doc_appointment?retryWrites=true&w=majority';
-
-const connectDB = async () => {
+const connectToMongo = async (retryCount) => {
+    const MAX_RETRIES = 3;
+    const count = retryCount ?? 0;
     try {
-        await mongoose.connect(mongoURI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
-        console.log('MongoDB Connected...');
-    } catch (err) {
-        console.error(err.message);
-        // Exit process with failure
-        process.exit(1);
+        await mongoose.connect(mongoURI, { dbName: 'stayhealthybeta1'});
+        console.info('Connected to Mongo Successfully')
+
+        return;
+    } catch (error) {
+        console.error(error);
+
+        const nextRetryCount = count + 1;
+
+        if (nextRetryCount >= MAX_RETRIES) {
+            throw new Error('Unable to connect to Mongo!');
+        }
+
+        console.info(`Retrying, retry count: ${nextRetryCount}`)
+
+        return await connectToMongo(nextRetryCount);
+
     }
 };
 
-module.exports = connectDB;
+module.exports = connectToMongo;
